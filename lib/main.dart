@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'helper.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
+Helper helper = Helper();
 void main() => runApp(QuizApp());
 
 class QuizApp extends StatelessWidget {
@@ -24,6 +27,43 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
+  List<Widget> marcadorDePontos = [];
+
+  void conferirResposta(bool respostaSelecionada) {
+    bool respostaCerta = helper.obterResposta();
+    setState(() {
+      if (helper.confereFimDaExecucao() == true) {
+        Alert(
+          context: context,
+          title: 'Fim do Quiz!',
+          desc: 'Você respondeu a todas as perguntas.',
+          buttons: [
+            DialogButton(
+              child: Text('Finalizar'),
+              onPressed: () => Navigator.pop(context),
+            )
+          ],
+        ).show();
+        helper.resetarQuiz();
+        marcadorDePontos = [];
+      } else {
+        if (respostaSelecionada == respostaCerta) {
+          marcadorDePontos.add(Icon(
+            Icons.check,
+            color: Colors.green,
+          ));
+        } else {
+          marcadorDePontos.add(Icon(
+            Icons.close,
+            color: Colors.red,
+          ));
+        }
+
+        helper.proximaPergunta();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -36,7 +76,7 @@ class _QuizPageState extends State<QuizPage> {
             padding: EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                'As perguntas serão exibidas aqui.',
+                helper.obterQuestao(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 25.0,
@@ -48,9 +88,8 @@ class _QuizPageState extends State<QuizPage> {
         Expanded(
           child: Padding(
             padding: EdgeInsets.all(15.0),
-            child: FlatButton(
-              textColor: Colors.white,
-              color: Colors.deepPurple,
+            child: TextButton(
+              style: TextButton.styleFrom(backgroundColor: Colors.deepPurple),
               child: Text(
                 'Verdadeiro',
                 style: TextStyle(
@@ -59,7 +98,7 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
               onPressed: () {
-                //O usuário clica no botão verdadeiro.
+                conferirResposta(true);
               },
             ),
           ),
@@ -67,8 +106,9 @@ class _QuizPageState extends State<QuizPage> {
         Expanded(
           child: Padding(
             padding: EdgeInsets.all(15.0),
-            child: FlatButton(
-              color: Colors.grey.shade800,
+            child: TextButton(
+              style:
+                  TextButton.styleFrom(backgroundColor: Colors.grey.shade800),
               child: Text(
                 'Falso',
                 style: TextStyle(
@@ -77,19 +117,15 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
               onPressed: () {
-                //O usuário clica no botão falso.
+                conferirResposta(false);
               },
             ),
           ),
         ),
-        //TODO: Adicionar uma Row aqui para o marcador de pontos.
+        Row(
+          children: marcadorDePontos,
+        ),
       ],
     );
   }
 }
-
-/*
-pergunta1: 'O metrô é um dos meios de transporte mais seguros do mundo', verdadeiro,
-pergunta2: 'A culinária brasileira é uma das melhores do mundo.', verdadeiro,
-pergunta3: 'Vacas podem voar, assim como peixes utilizam os pés para andar.', falso,
-*/
